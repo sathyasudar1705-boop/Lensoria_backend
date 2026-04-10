@@ -1,0 +1,80 @@
+import { createBooking, findBookingById, findBookingsByUserId, findBookingsByPhotographerId, updateBookingStatus, deleteBooking, getAllBookings } from "../services/booking.services.js";
+import { bookingValidation } from "../schemas/booking.schema.js";
+import User from "../models/user.models.js";
+import Photographer from "../models/photographers.models.js";
+
+export const createBookingController = async (req, res) => {
+  try {
+    const { error, value } = bookingValidation.validate(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message });
+
+    // 1. Check if user exists
+    const userExist = await User.findById(value.userId);
+    if (!userExist) return res.status(404).json({ message: "User not found" });
+
+    // 2. Check if photographer exists
+    const photographerExist = await Photographer.findById(value.photographerId);
+    if (!photographerExist) return res.status(404).json({ message: "Photographer not found" });
+
+    const newBooking = await createBooking(value);
+    res.status(201).json({ message: "Booking created successfully", booking: newBooking });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getBookingByIdController = async (req, res) => {
+  try {
+    const booking = await findBookingById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    res.status(200).json(booking);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getBookingsByUserController = async (req, res) => {
+  try {
+    const bookings = await findBookingsByUserId(req.params.userId);
+    res.status(200).json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getBookingsByPhotographerController = async (req, res) => {
+  try {
+    const bookings = await findBookingsByPhotographerId(req.params.photographerId);
+    res.status(200).json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateBookingStatusController = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updatedBooking = await updateBookingStatus(req.params.id, status);
+    res.status(200).json({ message: "Booking status updated", booking: updatedBooking });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteBookingController = async (req, res) => {
+  try {
+    await deleteBooking(req.params.id);
+    res.status(200).json({ message: "Booking deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getAllBookingsController = async (req, res) => {
+  try {
+    const bookings = await getAllBookings();
+    res.status(200).json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
