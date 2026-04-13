@@ -13,6 +13,24 @@ const photographerSchema = new mongoose.Schema(
     price: Number,
     city: String,
     state: String,
+    profile_pic: String,
+    portfolio: [String], // Array of image URLs
+    packages: [
+      {
+        title: String,
+        price: Number,
+        duration: String,
+        deliverables: String,
+        description: String,
+        features: [String]
+      }
+    ],
+    social_links: {
+      instagram: String,
+      facebook: String,
+      website: String
+    },
+    unavailable_dates: [String]
   },
   { timestamps: true },
 );

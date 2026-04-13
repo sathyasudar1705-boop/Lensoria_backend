@@ -19,7 +19,7 @@ export const findUserById = async (id) => {
 };
 
 export const updateUser = async (id, data) => {
-  return await User.findByIdAndUpdate(id, data, { new: true });
+  return await User.findByIdAndUpdate(id, data, { returnDocument: "after" });
 };
 
 export const deleteUser = async (id) => {

@@ -6,5 +6,9 @@ export const bookingValidation = Joi.object({
   bookingDate: Joi.date().required(),
   amount: Joi.number().required(),
   notes: Joi.string().allow(""),
-  status: Joi.string().valid("pending", "confirmed", "completed", "cancelled"),
+  customerName: Joi.string().allow(""),
+  customerPhone: Joi.string().allow(""),
+  location: Joi.string().allow(""),
+  requirements: Joi.string().allow(""),
+  status: Joi.string().valid("pending", "accepted", "rejected", "confirmed", "editing", "framing", "delivered", "completed", "cancelled"),
 });

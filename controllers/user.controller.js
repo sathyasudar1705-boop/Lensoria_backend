@@ -83,3 +83,24 @@ export const getAllUsersController = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+
+    const userId = req.params.id;
+    const imageUrl = req.file.path; // Cloudinary URL
+
+    const updatedUser = await updateUser(userId, { profile_image: imageUrl });
+    
+    res.status(200).json({
+      message: "Profile picture updated successfully",
+      profile_image: imageUrl,
+      user: updatedUser
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -18,7 +18,7 @@ export const findBookingsByPhotographerId = async (photographerId) => {
 };
 
 export const updateBookingStatus = async (id, status) => {
-  return await Booking.findByIdAndUpdate(id, { status }, { new: true });
+  return await Booking.findByIdAndUpdate(id, { status }, { returnDocument: 'after' });
 };
 
 export const deleteBooking = async (id) => {

@@ -5,9 +5,10 @@ import dotenv from "dotenv";
 import photographerRouter from "./routers/photographer.router.js";
 import userRouter from "./routers/user.router.js";
 import bookingRouter from "./routers/booking.router.js";
-import portfolioRouter from "./routers/portfolio.router.js";
 import reviewRouter from "./routers/review.router.js";
 import categoryRouter from "./routers/category.router.js";
+
+import path from "path";
 
 dotenv.config();
 
@@ -21,7 +22,7 @@ if (!MONGO_URL) {
 
 
 mongoose
-  .connect(MONGO_URL)
+  .connect(MONGO_URL, { family: 4 })
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch((err) => {
     console.error("MongoDB connection error:", err.message);
@@ -30,6 +31,7 @@ mongoose
 
 app.use(express.json());
 app.use(cors());
+app.use("/uploads", express.static("uploads"));
 
 
 app.get("/", (req, res) => {
@@ -40,7 +42,6 @@ app.get("/", (req, res) => {
 app.use("/api/photographers", photographerRouter);
 app.use("/api/users", userRouter);
 app.use("/api/bookings", bookingRouter);
-app.use("/api/portfolios", portfolioRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/categories", categoryRouter);
 

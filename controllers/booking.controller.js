@@ -17,6 +17,16 @@ export const createBookingController = async (req, res) => {
     if (!photographerExist) return res.status(404).json({ message: "Photographer not found" });
 
     const newBooking = await createBooking(value);
+
+    // Instant Date Blocking: Add to unavailable_dates on creation
+    const dateStr = value.bookingDate instanceof Date 
+        ? value.bookingDate.toISOString().split('T')[0]
+        : new Date(value.bookingDate).toISOString().split('T')[0];
+        
+    await Photographer.findByIdAndUpdate(value.photographerId, {
+      $addToSet: { unavailable_dates: dateStr }
+    });
+
     res.status(201).json({ message: "Booking created successfully", booking: newBooking });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -55,6 +65,27 @@ export const updateBookingStatusController = async (req, res) => {
   try {
     const { status } = req.body;
     const updatedBooking = await updateBookingStatus(req.params.id, status);
+
+    // Dynamic Availability: Block/Unblock dates in photographer's calendar
+    if (["accepted", "rejected", "cancelled"].includes(status)) {
+      const booking = await findBookingById(req.params.id);
+      if (booking && booking.photographerId && booking.bookingDate) {
+        const dateStr = booking.bookingDate instanceof Date 
+            ? booking.bookingDate.toISOString().split('T')[0]
+            : new Date(booking.bookingDate).toISOString().split('T')[0];
+            
+        if (status === "accepted") {
+          await Photographer.findByIdAndUpdate(booking.photographerId, {
+            $addToSet: { unavailable_dates: dateStr }
+          });
+        } else if (status === "rejected" || status === "cancelled") {
+          await Photographer.findByIdAndUpdate(booking.photographerId, {
+            $pull: { unavailable_dates: dateStr }
+          });
+        }
+      }
+    }
+
     res.status(200).json({ message: "Booking status updated", booking: updatedBooking });
   } catch (err) {
     res.status(500).json({ message: err.message });
