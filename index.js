@@ -9,73 +9,82 @@ import bookingRouter from "./routers/booking.router.js";
 import reviewRouter from "./routers/review.router.js";
 import categoryRouter from "./routers/category.router.js";
 
-dotenv.config();
+/* ---------------- SAFE DOTENV LOAD ---------------- */
+// Only load .env locally (NOT in Render)
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const app = express();
 
-// PORT
+/* ---------------- PORT ---------------- */
 const PORT = process.env.PORT || 5000;
 
-// MongoDB URL
+/* ---------------- MONGO URL ---------------- */
 const MONGO_URL = process.env.MONGO_URL;
 
-/* -------------------- CORS FIX (IMPORTANT) -------------------- */
+// safety check (IMPORTANT)
+if (!MONGO_URL) {
+  console.error("❌ MONGO_URL is not defined in environment variables");
+  process.exit(1);
+}
+
+/* ---------------- CORS ---------------- */
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://studio-rho-orcin.vercel.app"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like Postman)
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("CORS blocked for this origin: " + origin));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log("❌ Blocked CORS:", origin);
+        return callback(new Error("CORS blocked for this origin"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
+);
 
-// Preflight fix
 app.options("*", cors());
 
-/* -------------------- MIDDLEWARE -------------------- */
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-/* -------------------- ROUTES -------------------- */
+/* ---------------- ROUTES ---------------- */
 app.use("/api/photographers", photographerRouter);
 app.use("/api/users", userRouter);
 app.use("/api/bookings", bookingRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/categories", categoryRouter);
 
-/* -------------------- HOME ROUTE -------------------- */
+/* ---------------- HOME ROUTE ---------------- */
 app.get("/", (req, res) => {
   res.json({
     status: "Server is running 🚀",
-    database:
-      mongoose.connection.readyState === 1
-        ? "Connected"
-        : "Disconnected",
+    database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected"
   });
 });
 
-/* -------------------- DB CONNECT -------------------- */
+/* ---------------- DB CONNECT ---------------- */
 mongoose
   .connect(MONGO_URL)
-  .then(() => console.log("MongoDB Connected Successfully"))
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => {
-    console.error("MongoDB connection error:", err.message);
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
   });
 
-/* -------------------- START SERVER -------------------- */
+/* ---------------- START SERVER ---------------- */
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
